@@ -1,0 +1,53 @@
+#!/bin/sh
+
+# Toggle the current IBus engine between US English and Mozc Hiragana.
+set -u
+
+english_engine=${IBUS_TOGGLE_ENGLISH_ENGINE:-xkb:us::eng}
+japanese_engine=${IBUS_TOGGLE_JAPANESE_ENGINE:-mozc-on}
+
+show_error() {
+    message=$1
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -u critical -a 'IBus EN/JA Toggle' \
+            'Input method could not be changed' "$message"
+    fi
+    printf '%s\n' "$message" >&2
+}
+
+show_mode() {
+    message=$1
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -t 1200 -a 'IBus EN/JA Toggle' \
+            'Input method' "$message"
+    fi
+}
+
+if ! command -v ibus >/dev/null 2>&1; then
+    show_error 'The ibus command was not found.'
+    exit 127
+fi
+
+if ! current_engine=$(ibus engine 2>/dev/null); then
+    show_error 'IBus is not running in this desktop session.'
+    exit 1
+fi
+
+case $current_engine in
+    "$english_engine")
+        target_engine=$japanese_engine
+        mode_label='日本語入力 (Mozc・ひらがな)'
+        ;;
+    *)
+        target_engine=$english_engine
+        mode_label='英字入力 (US)'
+        ;;
+esac
+
+if ! error_message=$(ibus engine "$target_engine" 2>&1); then
+    show_error "Failed to switch to $target_engine: $error_message"
+    exit 1
+fi
+
+show_mode "$mode_label"
+exit 0

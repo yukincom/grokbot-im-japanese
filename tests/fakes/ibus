@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -u
+
+: "${IBUS_FAKE_STATE:?IBUS_FAKE_STATE is required}"
+
+case ${1:-} in
+    engine)
+        if [ "$#" -eq 1 ]; then
+            sed -n '1p' "$IBUS_FAKE_STATE"
+        else
+            printf '%s\n' "$2" > "$IBUS_FAKE_STATE"
+        fi
+        ;;
+    list-engine)
+        printf '%s\n' 'xkb:us::eng' 'mozc-jp' 'mozc-on'
+        ;;
+    *)
+        printf 'unexpected fake ibus command: %s\n' "$*" >&2
+        exit 2
+        ;;
+esac

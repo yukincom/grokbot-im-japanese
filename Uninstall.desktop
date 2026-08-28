@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Uninstall IBus EN/JA Toggle
+Name[ja]=IBus 英字・日本語切り替えを削除
+Comment=Remove IBus EN/JA Toggle from this user account
+Comment[ja]=IBus英字・日本語切り替えを現在のユーザーから削除します
+Exec=sh -c "desktop_file=$1; desktop_file=${desktop_file#file://}; IBUS_TOGGLE_PAUSE=1; export IBUS_TOGGLE_PAUSE; exec sh \"$(dirname \"$desktop_file\")/uninstall.sh\"" placeholder %k
+Icon=edit-delete
+Terminal=true
+StartupNotify=false
+Categories=Utility;

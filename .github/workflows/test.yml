@@ -1,0 +1,19 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run integration test
+        run: sh tests/test.sh
+      - name: Install validators
+        run: sudo apt-get update && sudo apt-get install -y shellcheck desktop-file-utils
+      - name: Run ShellCheck
+        run: shellcheck install.sh uninstall.sh src/ibus-toggle-enja tests/fakes/ibus tests/test.sh
+      - name: Validate desktop launchers
+        run: desktop-file-validate Install.desktop Uninstall.desktop
