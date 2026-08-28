@@ -1,3 +1,10 @@
+# ⚠️ 現在は使用しないでください ⚠️
+
+> [!CAUTION]
+> **GrokBotのアップデートのたびに、OS・IBus/Mozc・GUIセッションが再構成され、日本語入力やランチャーが壊れる可能性があります。現在のGrokBot/Cursor環境では安定動作を保証できないため、このツールをインストール・使用しないでください。**
+>
+> **DO NOT USE:** GrokBot updates may rebuild the OS, IBus/Mozc, and the GUI session. This project is currently retained for reference only and is not considered stable.
+
 # GrokBot! I'M JAPANESE!!
 
 > **WHERE'S MY IME!?**
@@ -18,7 +25,7 @@ sh install.sh
 
 通常のXFCEと、`Xfwm4 + Plank` だけの最小環境に対応します。
 
-GrokBotのOS更新でIBusが消えた場合は、次回起動時に `sudo apt-get` で必要パッケージを自動復旧します。インストール先と設定は `$HOME` 以下に残るため、OS部分だけ交換されても再インストールは不要です。
+GrokBotのOS更新でIBusが消えた場合、`sudo apt-get` による自動復旧を試みる実験的な実装が含まれます。ただし、GrokBot側のGUIセッションやランチャーも再構成されるため、更新後の自動復旧は保証できません。
 
 ## 使い方
 
@@ -31,9 +38,9 @@ IBusと、`mozc-on`を提供するMozcが必要です。
 
 Chromeでは、追加される **Chrome＋日本語入力（自己修復）** を使用してください。GrokBot標準Chromeとは別プロファイルで起動し、DBus・IBus・Chromeへ同じ入力環境を渡します。引数なしで起動すると `http://127.0.0.1:8080` を開きます。
 
-## OS更新後
+## OS更新後（動作保証なし）
 
-基本的には何もしなくて構いません。切り替えボタンまたは専用Chromeを押すと、以下を自動実行します。
+以下の自動復旧を試みますが、GrokBotの更新内容によっては機能しません。現在はこの機能に依存しないでください。
 
 1. `ibus`、Mozc、DBusが存在するか確認
 2. 消えていた場合だけDebianパッケージを復旧
