@@ -1,9 +1,9 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=Install IBus EN/JA Toggle
-Name[ja]=IBus 英字・日本語切り替えをインストール
-Comment=Install a one-click IBus US English and Mozc Hiragana switcher
+Name=Install GrokBot! I'M JAPANESE!!
+Name[ja]=GrokBot! I'M JAPANESE!! をインストール
+Comment=Install the one-click WHERE'S MY IME!? button
 Comment[ja]=IBusのUS英字入力とMozcひらがな入力の切り替えボタンをインストールします
 Exec=sh -c "desktop_file=$1; desktop_file=${desktop_file#file://}; IBUS_TOGGLE_PAUSE=1; export IBUS_TOGGLE_PAUSE; exec sh \"$(dirname \"$desktop_file\")/install.sh\"" placeholder %k
 Icon=system-software-install

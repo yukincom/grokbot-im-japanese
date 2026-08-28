@@ -9,7 +9,7 @@ japanese_engine=${IBUS_TOGGLE_JAPANESE_ENGINE:-mozc-on}
 show_error() {
     message=$1
     if command -v notify-send >/dev/null 2>&1; then
-        notify-send -u critical -a 'IBus EN/JA Toggle' \
+        notify-send -u critical -a "GrokBot! I'M JAPANESE!!" \
             'Input method could not be changed' "$message"
     fi
     printf '%s\n' "$message" >&2
@@ -18,7 +18,7 @@ show_error() {
 show_mode() {
     message=$1
     if command -v notify-send >/dev/null 2>&1; then
-        notify-send -t 1200 -a 'IBus EN/JA Toggle' \
+        notify-send -t 1200 -a "GrokBot! I'M JAPANESE!!" \
             'Input method' "$message"
     fi
 }

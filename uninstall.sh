@@ -34,6 +34,6 @@ for desktop_dir in "$HOME/Desktop" "$HOME/デスクトップ"; do
     rm -f "$desktop_dir/$app_id.desktop"
 done
 
-printf '%s\n' 'IBus EN/JA Toggle を現在のユーザーから削除しました。'
+printf '%s\n' "GrokBot! I'M JAPANESE!! を現在のユーザーから削除しました。"
 pause_if_requested
 exit 0

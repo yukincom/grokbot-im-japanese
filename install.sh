@@ -4,7 +4,7 @@
 set -u
 
 app_id=ibus-toggle-enja
-app_name='英字 ↔ 日本語'
+app_name="GrokBot! I'M JAPANESE!!"
 
 pause_if_requested() {
     if [ "${IBUS_TOGGLE_PAUSE:-0}" = 1 ]; then
@@ -59,9 +59,8 @@ chmod 0644 "$icon_file" \
     printf '%s\n' 'Version=1.0'
     printf '%s\n' 'Type=Application'
     printf 'Name=%s\n' "$app_name"
-    printf '%s\n' 'Name[en]=English ↔ Japanese'
-    printf '%s\n' 'Comment=IBusのUS英字入力とMozcひらがな入力を切り替えます'
-    printf '%s\n' 'Comment[en]=Toggle IBus between US English and Mozc Hiragana'
+    printf '%s\n' "Comment=WHERE'S MY IME!? US英字入力とMozcひらがな入力を切り替えます"
+    printf '%s\n' "Comment[en]=WHERE'S MY IME!? Toggle US English and Mozc Hiragana"
     printf '%s\n' 'Exec=sh -c "exec \"$HOME/.local/bin/ibus-toggle-enja\""'
     printf 'Icon=%s\n' "$icon_file"
     printf '%s\n' 'Terminal=false'
@@ -142,7 +141,7 @@ if process_is_running xfdesktop; then
     fi
 fi
 
-printf '\n%s\n' 'IBus EN/JA Toggle をインストールしました。'
+printf '\n%s\n' "GrokBot! I'M JAPANESE!! をインストールしました。"
 printf '  本体: %s\n' "$bin_file"
 printf '  アプリ: %s\n' "$desktop_file"
 printf '  アイコン: %s\n' "$icon_file"
