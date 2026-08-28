@@ -51,6 +51,14 @@ chrome_id=grokbot-ime-chrome
 chrome_bin_file=$bin_dir/$chrome_id
 chrome_desktop_file=$applications_dir/$chrome_id.desktop
 
+# Remove launcher IDs created during early GrokBot experiments. These exact
+# project-specific paths are obsolete and otherwise leave duplicate dock icons.
+for legacy_id in grokbot-ime-toggle ime-toggle; do
+    rm -f "$bin_dir/$legacy_id" "$applications_dir/$legacy_id.desktop" \
+        "$icons_dir/$legacy_id.png"
+done
+rm -f "$HOME/bin/ime-toggle"
+
 mkdir -p "$bin_dir" "$libexec_dir" "$applications_dir" "$icons_dir" \
     || fail 'インストール先ディレクトリを作成できませんでした。'
 
@@ -92,7 +100,7 @@ chmod 0755 "$desktop_file" \
     printf '%s\n' 'Comment=Start a private D-Bus/IBus session and open Chrome'
     printf '%s\n' 'Comment[ja]=IBusを必要なら復旧し、日本語入力が届く専用Chromeを開きます'
     printf '%s\n' 'Exec=sh -c "exec \"$HOME/.local/bin/grokbot-ime-chrome\""'
-    printf 'Icon=%s\n' "$icon_file"
+    printf '%s\n' 'Icon=google-chrome'
     printf '%s\n' 'Terminal=false'
     printf '%s\n' 'StartupNotify=false'
     printf '%s\n' 'StartupWMClass=grokbot-ime-chrome'
@@ -121,6 +129,8 @@ plank_root=$config_home/plank
 if [ -d "$plank_root" ]; then
     for launchers_dir in "$plank_root"/*/launchers; do
         [ -d "$launchers_dir" ] || continue
+        rm -f "$launchers_dir/grokbot-ime-toggle.dockitem" \
+            "$launchers_dir/ime-toggle.dockitem"
         {
             printf '%s\n' '[PlankDockItemPreferences]'
             printf 'Launcher=file://%s\n' "$desktop_file"
@@ -136,6 +146,8 @@ fi
 if [ "$plank_count" -eq 0 ] && process_is_running plank; then
     launchers_dir=$plank_root/dock1/launchers
     if mkdir -p "$launchers_dir"; then
+        rm -f "$launchers_dir/grokbot-ime-toggle.dockitem" \
+            "$launchers_dir/ime-toggle.dockitem"
         {
             printf '%s\n' '[PlankDockItemPreferences]'
             printf 'Launcher=file://%s\n' "$desktop_file"

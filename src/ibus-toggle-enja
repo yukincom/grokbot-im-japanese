@@ -57,8 +57,18 @@ case $current_engine in
         ;;
 esac
 
-if ! error_message=$(ibus engine "$target_engine" 2>&1); then
-    show_error "Failed to switch to $target_engine: $error_message"
+error_message=$(ibus engine "$target_engine" 2>&1)
+switch_status=$?
+confirmed_engine=$(ibus engine 2>/dev/null || true)
+
+# Some IBus/Mozc builds return a failure status after the engine has already
+# changed. Treat the observed engine as authoritative.
+if [ "$confirmed_engine" != "$target_engine" ]; then
+    if [ -n "$error_message" ]; then
+        show_error "Failed to switch to $target_engine: $error_message"
+    else
+        show_error "Failed to switch to $target_engine (status $switch_status)."
+    fi
     exit 1
 fi
 

@@ -13,6 +13,9 @@ case ${1:-} in
             sed -n '1p' "$IBUS_FAKE_STATE"
         else
             printf '%s\n' "$2" > "$IBUS_FAKE_STATE"
+            if [ -n "${IBUS_FAKE_SWITCH_EXIT:-}" ]; then
+                exit "$IBUS_FAKE_SWITCH_EXIT"
+            fi
         fi
         ;;
     list-engine)

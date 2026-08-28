@@ -13,8 +13,16 @@ fake_state=$test_root/ibus-state
 fake_path=$repo_dir/tests/fakes:$PATH
 fake_runtime=$repo_dir/tests/fakes/runtime
 
-mkdir -p "$fake_config/plank/dock1/launchers"
+mkdir -p "$fake_config/plank/dock1/launchers" "$fake_home/.local/bin" \
+    "$fake_data/applications" "$fake_data/icons" "$fake_home/bin"
 printf '%s\n' 'xkb:us::eng' > "$fake_state"
+for legacy_id in grokbot-ime-toggle ime-toggle; do
+    : > "$fake_home/.local/bin/$legacy_id"
+    : > "$fake_data/applications/$legacy_id.desktop"
+    : > "$fake_data/icons/$legacy_id.png"
+    : > "$fake_config/plank/dock1/launchers/$legacy_id.dockitem"
+done
+: > "$fake_home/bin/ime-toggle"
 
 HOME=$fake_home \
 XDG_CONFIG_HOME=$fake_config \
@@ -32,6 +40,12 @@ test -x "$fake_data/applications/grokbot-ime-chrome.desktop"
 test -f "$fake_data/icons/ibus-toggle-enja.png"
 test -f "$fake_config/plank/dock1/launchers/ibus-toggle-enja.dockitem"
 test -f "$fake_config/plank/dock1/launchers/grokbot-ime-chrome.dockitem"
+test ! -e "$fake_home/.local/bin/grokbot-ime-toggle"
+test ! -e "$fake_data/applications/grokbot-ime-toggle.desktop"
+test ! -e "$fake_config/plank/dock1/launchers/grokbot-ime-toggle.dockitem"
+test ! -e "$fake_data/applications/ime-toggle.desktop"
+test ! -e "$fake_config/plank/dock1/launchers/ime-toggle.dockitem"
+test ! -e "$fake_home/bin/ime-toggle"
 
 grep -Fq "Icon=$fake_data/icons/ibus-toggle-enja.png" \
     "$fake_data/applications/ibus-toggle-enja.desktop"
@@ -39,10 +53,12 @@ grep -Fq "Launcher=file://$fake_data/applications/ibus-toggle-enja.desktop" \
     "$fake_config/plank/dock1/launchers/ibus-toggle-enja.dockitem"
 grep -Fq "Launcher=file://$fake_data/applications/grokbot-ime-chrome.desktop" \
     "$fake_config/plank/dock1/launchers/grokbot-ime-chrome.dockitem"
+grep -Fq 'Icon=google-chrome' "$fake_data/applications/grokbot-ime-chrome.desktop"
 
 HOME=$fake_home \
 PATH=$fake_path \
 IBUS_FAKE_STATE=$fake_state \
+IBUS_FAKE_SWITCH_EXIT=1 \
 GROKBOT_IME_RUNTIME=$fake_runtime \
 sh "$fake_home/.local/bin/ibus-toggle-enja"
 test "$(sed -n '1p' "$fake_state")" = 'mozc-on'

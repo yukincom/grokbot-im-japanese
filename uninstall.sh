@@ -26,6 +26,12 @@ chrome_desktop_file=$data_home/applications/$chrome_id.desktop
 
 rm -f "$bin_file" "$chrome_bin_file" "$runtime_file" \
     "$desktop_file" "$chrome_desktop_file" "$icon_file"
+for legacy_id in grokbot-ime-toggle ime-toggle; do
+    rm -f "$HOME/.local/bin/$legacy_id" \
+        "$data_home/applications/$legacy_id.desktop" \
+        "$data_home/icons/$legacy_id.png"
+done
+rm -f "$HOME/bin/ime-toggle"
 rmdir "$runtime_dir" 2>/dev/null || true
 
 plank_root=$config_home/plank
@@ -33,7 +39,9 @@ if [ -d "$plank_root" ]; then
     for dock_dir in "$plank_root"/*; do
         [ -d "$dock_dir/launchers" ] || continue
         rm -f "$dock_dir/launchers/$app_id.dockitem" \
-            "$dock_dir/launchers/$chrome_id.dockitem"
+            "$dock_dir/launchers/$chrome_id.dockitem" \
+            "$dock_dir/launchers/grokbot-ime-toggle.dockitem" \
+            "$dock_dir/launchers/ime-toggle.dockitem"
     done
 fi
 
