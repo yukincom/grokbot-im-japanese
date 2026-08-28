@@ -38,6 +38,7 @@ test -x "$fake_home/.local/libexec/grokbot-ime/runtime"
 test -x "$fake_data/applications/ibus-toggle-enja.desktop"
 test -x "$fake_data/applications/grokbot-ime-chrome.desktop"
 test -f "$fake_data/icons/ibus-toggle-enja.png"
+test -f "$fake_data/icons/grokbot-ime-chrome.png"
 test -f "$fake_config/plank/dock1/launchers/ibus-toggle-enja.dockitem"
 test -f "$fake_config/plank/dock1/launchers/grokbot-ime-chrome.dockitem"
 test ! -e "$fake_home/.local/bin/grokbot-ime-toggle"
@@ -53,7 +54,8 @@ grep -Fq "Launcher=file://$fake_data/applications/ibus-toggle-enja.desktop" \
     "$fake_config/plank/dock1/launchers/ibus-toggle-enja.dockitem"
 grep -Fq "Launcher=file://$fake_data/applications/grokbot-ime-chrome.desktop" \
     "$fake_config/plank/dock1/launchers/grokbot-ime-chrome.dockitem"
-grep -Fq 'Icon=google-chrome' "$fake_data/applications/grokbot-ime-chrome.desktop"
+grep -Fq "Icon=$fake_data/icons/grokbot-ime-chrome.png" \
+    "$fake_data/applications/grokbot-ime-chrome.desktop"
 
 HOME=$fake_home \
 PATH=$fake_path \
@@ -131,6 +133,7 @@ test ! -e "$fake_home/.local/libexec/grokbot-ime/runtime"
 test ! -e "$fake_data/applications/ibus-toggle-enja.desktop"
 test ! -e "$fake_data/applications/grokbot-ime-chrome.desktop"
 test ! -e "$fake_data/icons/ibus-toggle-enja.png"
+test ! -e "$fake_data/icons/grokbot-ime-chrome.png"
 test ! -e "$fake_config/plank/dock1/launchers/ibus-toggle-enja.dockitem"
 test ! -e "$fake_config/plank/dock1/launchers/grokbot-ime-chrome.dockitem"
 

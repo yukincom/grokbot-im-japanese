@@ -30,11 +30,13 @@ source_script=$script_dir/src/ibus-toggle-enja
 source_runtime=$script_dir/src/grokbot-ime-runtime
 source_chrome=$script_dir/src/grokbot-ime-chrome
 source_icon=$script_dir/assets/ibus-toggle-enja.png
+source_chrome_icon=$script_dir/assets/grokbot-ime-chrome.png
 
 [ -f "$source_script" ] || fail "必要なファイルがありません: $source_script"
 [ -f "$source_runtime" ] || fail "必要なファイルがありません: $source_runtime"
 [ -f "$source_chrome" ] || fail "必要なファイルがありません: $source_chrome"
 [ -f "$source_icon" ] || fail "必要なファイルがありません: $source_icon"
+[ -f "$source_chrome_icon" ] || fail "必要なファイルがありません: $source_chrome_icon"
 
 data_home=${XDG_DATA_HOME:-$HOME/.local/share}
 config_home=${XDG_CONFIG_HOME:-$HOME/.config}
@@ -50,6 +52,7 @@ runtime_file=$libexec_dir/runtime
 chrome_id=grokbot-ime-chrome
 chrome_bin_file=$bin_dir/$chrome_id
 chrome_desktop_file=$applications_dir/$chrome_id.desktop
+chrome_icon_file=$icons_dir/$chrome_id.png
 
 # Remove launcher IDs created during early GrokBot experiments. These exact
 # project-specific paths are obsolete and otherwise leave duplicate dock icons.
@@ -70,9 +73,11 @@ cp "$source_chrome" "$chrome_bin_file" \
     || fail '日本語対応Chromeランチャーをコピーできませんでした。'
 cp "$source_icon" "$icon_file" \
     || fail 'アイコンをコピーできませんでした。'
+cp "$source_chrome_icon" "$chrome_icon_file" \
+    || fail '日本語対応Chromeのアイコンをコピーできませんでした。'
 chmod 0755 "$bin_file" "$runtime_file" "$chrome_bin_file" \
     || fail '実行ファイルへ実行権限を付けられませんでした。'
-chmod 0644 "$icon_file" \
+chmod 0644 "$icon_file" "$chrome_icon_file" \
     || fail 'アイコンの権限を設定できませんでした。'
 
 {
@@ -100,7 +105,7 @@ chmod 0755 "$desktop_file" \
     printf '%s\n' 'Comment=Start a private D-Bus/IBus session and open Chrome'
     printf '%s\n' 'Comment[ja]=IBusを必要なら復旧し、日本語入力が届く専用Chromeを開きます'
     printf '%s\n' 'Exec=sh -c "exec \"$HOME/.local/bin/grokbot-ime-chrome\""'
-    printf '%s\n' 'Icon=google-chrome'
+    printf 'Icon=%s\n' "$chrome_icon_file"
     printf '%s\n' 'Terminal=false'
     printf '%s\n' 'StartupNotify=false'
     printf '%s\n' 'StartupWMClass=grokbot-ime-chrome'
@@ -198,6 +203,7 @@ printf '  自己修復: %s\n' "$runtime_file"
 printf '  Chrome: %s\n' "$chrome_desktop_file"
 printf '  アプリ: %s\n' "$desktop_file"
 printf '  アイコン: %s\n' "$icon_file"
+printf '  Chromeアイコン: %s\n' "$chrome_icon_file"
 
 if [ "$plank_count" -gt 0 ]; then
     printf '  Plank: %s 個のドックへ追加しました。\n' "$plank_count"

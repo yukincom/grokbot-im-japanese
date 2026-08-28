@@ -23,9 +23,10 @@ icon_file=$data_home/icons/$app_id.png
 chrome_id=grokbot-ime-chrome
 chrome_bin_file=$HOME/.local/bin/$chrome_id
 chrome_desktop_file=$data_home/applications/$chrome_id.desktop
+chrome_icon_file=$data_home/icons/$chrome_id.png
 
 rm -f "$bin_file" "$chrome_bin_file" "$runtime_file" \
-    "$desktop_file" "$chrome_desktop_file" "$icon_file"
+    "$desktop_file" "$chrome_desktop_file" "$icon_file" "$chrome_icon_file"
 for legacy_id in grokbot-ime-toggle ime-toggle; do
     rm -f "$HOME/.local/bin/$legacy_id" \
         "$data_home/applications/$legacy_id.desktop" \
