@@ -6,6 +6,9 @@ set -u
 
 case ${1:-} in
     engine)
+        if [ -n "${IBUS_FAKE_READY_FILE:-}" ] && [ ! -f "$IBUS_FAKE_READY_FILE" ]; then
+            exit 1
+        fi
         if [ "$#" -eq 1 ]; then
             sed -n '1p' "$IBUS_FAKE_STATE"
         else
@@ -14,6 +17,9 @@ case ${1:-} in
         ;;
     list-engine)
         printf '%s\n' 'xkb:us::eng' 'mozc-jp' 'mozc-on'
+        ;;
+    address)
+        printf '%s\n' 'unix:path=/tmp/fake-ibus'
         ;;
     *)
         printf 'unexpected fake ibus command: %s\n' "$*" >&2

@@ -1,0 +1,225 @@
+#!/bin/sh
+
+# Keep a private D-Bus/IBus session alive under the persistent home directory.
+# On GrokBot's Debian image, missing system packages can be restored with sudo.
+set -u
+
+app_name="GrokBot! I'M JAPANESE!!"
+state_home=${XDG_STATE_HOME:-$HOME/.local/state}
+cache_home=${XDG_CACHE_HOME:-$HOME/.cache}
+state_dir=$state_home/grokbot-ime
+runtime_dir=$cache_home/grokbot-ime
+env_file=${GROKBOT_IME_SESSION_ENV:-$runtime_dir/session.env}
+lock_dir=$runtime_dir/repair.lock
+log_file=$state_dir/runtime.log
+mozc_binary=${GROKBOT_IME_MOZC_BINARY:-/usr/lib/ibus-mozc/ibus-engine-mozc}
+
+mkdir -p "$state_dir" "$runtime_dir" || exit 1
+chmod 0700 "$runtime_dir" 2>/dev/null || true
+
+log() {
+    printf '%s %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf unknown-time)" "$*" \
+        >> "$log_file"
+}
+
+show_error() {
+    log "ERROR: $1"
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -u critical -a "$app_name" 'IME self-repair failed' "$1" \
+            >/dev/null 2>&1 || true
+    fi
+    printf 'ERROR: %s\n' "$1" >&2
+}
+
+have_packages() {
+    command -v ibus >/dev/null 2>&1 \
+        && command -v ibus-daemon >/dev/null 2>&1 \
+        && command -v dbus-daemon >/dev/null 2>&1 \
+        && command -v dbus-send >/dev/null 2>&1 \
+        && [ -x "$mozc_binary" ]
+}
+
+sudo_can_run() {
+    command -v sudo >/dev/null 2>&1 || return 1
+    sudo -n true >/dev/null 2>&1 && return 0
+    [ -t 0 ] || return 1
+    sudo true
+}
+
+repair_packages() {
+    have_packages && return 0
+
+    if [ "${GROKBOT_IME_DISABLE_REPAIR:-0}" = 1 ]; then
+        show_error 'IBus/Mozc is missing and automatic repair is disabled.'
+        return 1
+    fi
+    if ! command -v apt-get >/dev/null 2>&1; then
+        show_error 'IBus/Mozc is missing, and apt-get is unavailable.'
+        return 1
+    fi
+    if ! sudo_can_run; then
+        show_error 'IBus/Mozc is missing. Passwordless sudo, or a terminal for sudo, is required.'
+        return 1
+    fi
+
+    log 'System packages are missing; starting Debian package repair.'
+    if ! sudo env DEBIAN_FRONTEND=noninteractive apt-get update >> "$log_file" 2>&1; then
+        show_error "apt-get update failed. See $log_file"
+        return 1
+    fi
+    if ! sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        ibus ibus-mozc ibus-gtk ibus-gtk3 dbus-x11 >> "$log_file" 2>&1; then
+        show_error "Package installation failed. See $log_file"
+        return 1
+    fi
+    if ! have_packages; then
+        show_error 'Package installation finished, but the IBus/Mozc runtime is still incomplete.'
+        return 1
+    fi
+    log 'Debian package repair completed.'
+}
+
+load_session() {
+    [ -r "$env_file" ] || return 1
+    unset DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID IBUS_ADDRESS GROKBOT_JAPANESE_ENGINE
+    # This file is generated below in a mode-0700 directory using validated values.
+    . "$env_file"
+    export DBUS_SESSION_BUS_ADDRESS
+    if [ -n "${IBUS_ADDRESS:-}" ]; then
+        export IBUS_ADDRESS
+    else
+        unset IBUS_ADDRESS
+    fi
+}
+
+session_is_alive() {
+    load_session || return 1
+    [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ] || return 1
+    dbus-send --address="$DBUS_SESSION_BUS_ADDRESS" --type=method_call \
+        --dest=org.freedesktop.DBus / org.freedesktop.DBus.ListNames \
+        >/dev/null 2>&1
+}
+
+write_session() {
+    address=$1
+    bus_pid=$2
+    ibus_address=${3:-}
+    japanese_engine=${4:-mozc-jp}
+    temp_file=$env_file.tmp.$$
+
+    case $address in
+        unix:*) : ;;
+        *) show_error 'dbus-daemon returned an invalid session address.'; return 1 ;;
+    esac
+    case $bus_pid in
+        ''|*[!0-9]*) show_error 'dbus-daemon returned an invalid PID.'; return 1 ;;
+    esac
+    case $ibus_address in
+        ''|unix:*) : ;;
+        *) show_error 'IBus returned an invalid address.'; return 1 ;;
+    esac
+    case $japanese_engine in
+        mozc-on|mozc-jp) : ;;
+        *) japanese_engine=mozc-jp ;;
+    esac
+
+    umask 077
+    {
+        printf 'DBUS_SESSION_BUS_ADDRESS=%s\n' "$address"
+        printf 'DBUS_SESSION_BUS_PID=%s\n' "$bus_pid"
+        printf 'IBUS_ADDRESS=%s\n' "$ibus_address"
+        printf 'GROKBOT_JAPANESE_ENGINE=%s\n' "$japanese_engine"
+    } > "$temp_file" || return 1
+    mv "$temp_file" "$env_file"
+}
+
+start_dbus() {
+    dbus_output=$(dbus-daemon --session --fork --print-address=1 --print-pid=1 2>> "$log_file") \
+        || return 1
+    address=$(printf '%s\n' "$dbus_output" | sed -n '1p')
+    bus_pid=$(printf '%s\n' "$dbus_output" | sed -n '2p')
+    write_session "$address" "$bus_pid" '' mozc-jp || return 1
+    load_session || return 1
+    log "Started private D-Bus session PID $bus_pid."
+}
+
+start_ibus() {
+    load_session || return 1
+    if ! ibus engine >/dev/null 2>&1; then
+        log 'Starting IBus daemon.'
+        ibus-daemon --daemonize --replace --xim >> "$log_file" 2>&1 || return 1
+
+        attempt=0
+        while [ "$attempt" -lt 100 ]; do
+            if ibus engine >/dev/null 2>&1; then
+                break
+            fi
+            attempt=$((attempt + 1))
+            sleep 0.1
+        done
+        ibus engine >/dev/null 2>&1 || return 1
+    fi
+
+    available_engines=$(ibus list-engine 2>/dev/null || true)
+    case $available_engines in
+        *mozc-on*) japanese_engine=mozc-on ;;
+        *mozc-jp*) japanese_engine=mozc-jp ;;
+        *) show_error 'Mozc was installed, but no Mozc IBus engine was registered.'; return 1 ;;
+    esac
+    ibus_address=$(ibus address 2>/dev/null || true)
+    write_session "$DBUS_SESSION_BUS_ADDRESS" "${DBUS_SESSION_BUS_PID:-0}" \
+        "$ibus_address" "$japanese_engine"
+}
+
+acquire_lock() {
+    attempt=0
+    while ! mkdir "$lock_dir" 2>/dev/null; do
+        attempt=$((attempt + 1))
+        if [ "$attempt" -ge 3000 ]; then
+            show_error 'Timed out waiting for another IME repair process.'
+            return 1
+        fi
+        sleep 0.2
+    done
+    trap 'rmdir "$lock_dir" 2>/dev/null || true' 0 HUP INT TERM
+}
+
+ensure_runtime() {
+    acquire_lock || return 1
+    repair_packages || return 1
+
+    if ! session_is_alive; then
+        rm -f "$env_file"
+        start_dbus || {
+            show_error "Could not start a private D-Bus session. See $log_file"
+            return 1
+        }
+    fi
+    if ! start_ibus; then
+        show_error "Could not start IBus. See $log_file"
+        return 1
+    fi
+    load_session || return 1
+    rmdir "$lock_dir" 2>/dev/null || true
+    trap - 0 HUP INT TERM
+}
+
+case ${1:-ensure} in
+    ensure)
+        ensure_runtime
+        ;;
+    env)
+        ensure_runtime && cat "$env_file"
+        ;;
+    status)
+        if ensure_runtime; then
+            printf 'DBus: running\nIBus: %s\nJapanese engine: %s\n' \
+                "$(ibus engine 2>/dev/null || printf unknown)" \
+                "${GROKBOT_JAPANESE_ENGINE:-unknown}"
+        fi
+        ;;
+    *)
+        printf 'Usage: %s [ensure|env|status]\n' "$0" >&2
+        exit 2
+        ;;
+esac

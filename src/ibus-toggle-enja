@@ -4,7 +4,9 @@
 set -u
 
 english_engine=${IBUS_TOGGLE_ENGLISH_ENGINE:-xkb:us::eng}
-japanese_engine=${IBUS_TOGGLE_JAPANESE_ENGINE:-mozc-on}
+runtime=${GROKBOT_IME_RUNTIME:-$HOME/.local/libexec/grokbot-ime/runtime}
+cache_home=${XDG_CACHE_HOME:-$HOME/.cache}
+env_file=${GROKBOT_IME_SESSION_ENV:-$cache_home/grokbot-ime/session.env}
 
 show_error() {
     message=$1
@@ -23,10 +25,21 @@ show_mode() {
     fi
 }
 
+if [ -x "$runtime" ]; then
+    "$runtime" ensure || exit 1
+fi
+
+if [ -r "$env_file" ]; then
+    . "$env_file"
+    export DBUS_SESSION_BUS_ADDRESS IBUS_ADDRESS
+fi
+
 if ! command -v ibus >/dev/null 2>&1; then
-    show_error 'The ibus command was not found.'
+    show_error 'The ibus command was not found and automatic repair was unavailable.'
     exit 127
 fi
+
+japanese_engine=${IBUS_TOGGLE_JAPANESE_ENGINE:-${GROKBOT_JAPANESE_ENGINE:-mozc-on}}
 
 if ! current_engine=$(ibus engine 2>/dev/null); then
     show_error 'IBus is not running in this desktop session.'

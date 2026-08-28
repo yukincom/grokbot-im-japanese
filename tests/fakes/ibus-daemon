@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if [ -n "${IBUS_FAKE_READY_FILE:-}" ]; then
+    : > "$IBUS_FAKE_READY_FILE"
+fi
+exit 0

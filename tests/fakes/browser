@@ -1,0 +1,13 @@
+#!/bin/sh
+
+: "${GROKBOT_BROWSER_STATE:?GROKBOT_BROWSER_STATE is required}"
+
+{
+    printf 'GTK_IM_MODULE=%s\n' "${GTK_IM_MODULE:-}"
+    printf 'QT_IM_MODULE=%s\n' "${QT_IM_MODULE:-}"
+    printf 'XMODIFIERS=%s\n' "${XMODIFIERS:-}"
+    printf 'DBUS_SESSION_BUS_ADDRESS=%s\n' "${DBUS_SESSION_BUS_ADDRESS:-}"
+    for argument in "$@"; do
+        printf 'ARG=%s\n' "$argument"
+    done
+} > "$GROKBOT_BROWSER_STATE"

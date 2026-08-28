@@ -1,0 +1,3 @@
+#!/bin/sh
+
+printf '%s\n' 'unix:path=/tmp/fake-dbus' '4242'

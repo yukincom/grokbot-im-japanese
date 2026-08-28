@@ -1,0 +1,6 @@
+#!/bin/sh
+
+case ${1:-ensure} in
+    ensure) exit 0 ;;
+    *) exit 2 ;;
+esac
